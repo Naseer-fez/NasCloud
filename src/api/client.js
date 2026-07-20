@@ -13,7 +13,7 @@ function shouldSendNgrokHeader(url) {
 }
 
 function shouldSendAuthHeader() {
-  return localStorage.getItem(AUTH_USER_ID_KEY) !== '0';
+  return localStorage.getItem(AUTH_USER_ID_KEY) !== null;
 }
 
 function isBackendConnectionError(error) {
