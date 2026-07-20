@@ -190,187 +190,203 @@ export default function DualLogin() {
   return (
     <div className={styles.container}>
       <Link to="/home" className={styles.homeLink}>← Back to Home</Link>
+      
+      {/* Top Toggle Switch */}
+      <div className={styles.switchBox}>
+        <label className={styles.switch}>
+          <input
+            type="checkbox"
+            className={styles.toggle}
+            checked={mode === 'admin' || mode === 'register'}
+            onChange={(e) => setMode(e.target.checked ? 'admin' : 'access')}
+          />
+          <span className={styles.slider}></span>
+          <span className={styles.cardSide}></span>
+        </label>
+      </div>
+
       <div className={styles.singleWrapper}>
+        <div className={`${styles.flipCardInner} ${mode === 'admin' || mode === 'register' ? styles.flipped : ''}`}>
+          
+          {/* FRONT SIDE (User / Access Drive) */}
+          <div className={styles.flipCardFront}>
+            <div className={styles.formContent}>
+              <div className={styles.brandHeader}>
+                <img src="/nascloud.svg" alt="NasCloud Logo" className={styles.logoImg} />
+                <h1>Access Drive</h1>
+              </div>
 
-        {/* ACCESS DRIVE MODE (Default) */}
-        {mode === 'access' && (
-          <div className={styles.formContent}>
-            <div className={styles.brandHeader}>
-              <img src="/nascloud.svg" alt="NasCloud Logo" className={styles.logoImg} />
-              <h1>Access Drive</h1>
-            </div>
+              <div className={styles.formWrapper}>
+                <h2 className={styles.paneTitle}>Secure Drive Access</h2>
+                <p className={styles.paneSubtitle}>Enter the access code provided by the server owner</p>
 
-            <div className={styles.formWrapper}>
-              <h2 className={styles.paneTitle}>Secure Drive Access</h2>
-              <p className={styles.paneSubtitle}>Enter the access code provided by the server owner</p>
+                <form onSubmit={handleAccessSubmit}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>Access Code</label>
+                    <input
+                      type="text"
+                      className={styles.input}
+                      placeholder="Enter your server access code"
+                      value={accessCode}
+                      onChange={(e) => setAccessCode(e.target.value)}
+                      disabled={accessLoading}
+                    />
+                  </div>
 
-              <form onSubmit={handleAccessSubmit}>
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Access Code</label>
-                  <input
-                    type="text"
-                    className={styles.input}
-                    placeholder="Enter your server access code"
-                    value={accessCode}
-                    onChange={(e) => setAccessCode(e.target.value)}
-                    disabled={accessLoading}
-                  />
-                </div>
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>Password (Optional)</label>
+                    <input
+                      type="password"
+                      className={styles.input}
+                      placeholder="••••••••"
+                      value={accessPassword}
+                      onChange={(e) => setAccessPassword(e.target.value)}
+                      disabled={accessLoading}
+                    />
+                  </div>
 
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Password (Optional)</label>
-                  <input
-                    type="password"
-                    className={styles.input}
-                    placeholder="••••••••"
-                    value={accessPassword}
-                    onChange={(e) => setAccessPassword(e.target.value)}
-                    disabled={accessLoading}
-                  />
-                </div>
+                  {accessError && <p className={styles.errorMessage}>{accessError}</p>}
 
-                {accessError && <p className={styles.errorMessage}>{accessError}</p>}
+                  <button type="submit" className={styles.primaryBtn} disabled={accessLoading}>
+                    {accessLoading ? 'Connecting...' : 'Access Drive'}
+                  </button>
 
-                <button type="submit" className={styles.primaryBtn} disabled={accessLoading}>
-                  {accessLoading ? 'Connecting...' : 'Access Drive'}
+                  <div className={styles.toggleText}>
+                    <button type="button" onClick={() => navigate('/forgot-code')} className={styles.inlineBtn}>
+                      Forgot your code?
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <div className={styles.switchModeBox}>
+                <button type="button" onClick={() => setMode('admin')} className={styles.glowBtn}>
+                  Admin Login
                 </button>
+              </div>
+            </div>
+          </div>
 
-                <div className={styles.toggleText}>
-                  <button type="button" onClick={() => navigate('/forgot-code')} className={styles.inlineBtn}>
-                    Forgot your code?
+          {/* BACK SIDE (Admin Login or Admin Register) */}
+          <div className={styles.flipCardBack}>
+            {mode === 'register' ? (
+              <div className={styles.formContent}>
+                <div className={styles.brandHeader}>
+                  <img src="/nascloud.svg" alt="NasCloud Logo" className={styles.logoImg} />
+                  <h1>Admin Registration</h1>
+                </div>
+
+                <div className={styles.formWrapper}>
+                  <h2 className={styles.paneTitle}>Create Owner Account</h2>
+                  <p className={styles.paneSubtitle}>Sign up to the Central Server to generate API Keys</p>
+
+                  <form onSubmit={handleRegSubmit}>
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>Username</label>
+                      <input
+                        type="text"
+                        className={styles.input}
+                        placeholder="Admin username"
+                        value={regUsername}
+                        onChange={(e) => setRegUsername(e.target.value)}
+                        disabled={regLoading}
+                      />
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>Email Address</label>
+                      <input
+                        type="email"
+                        className={styles.input}
+                        placeholder="name@domain.com"
+                        value={regEmail}
+                        onChange={(e) => setRegEmail(e.target.value)}
+                        disabled={regLoading}
+                      />
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>Password</label>
+                      <input
+                        type="password"
+                        className={styles.input}
+                        placeholder="••••••••"
+                        value={regPassword}
+                        onChange={(e) => setRegPassword(e.target.value)}
+                        disabled={regLoading}
+                      />
+                    </div>
+
+                    {regError && <p className={styles.errorMessage}>{regError}</p>}
+
+                    <button type="submit" className={styles.primaryBtn} disabled={regLoading}>
+                      {regLoading ? 'Registering...' : 'Create Account'}
+                    </button>
+
+                    <div className={styles.toggleText}>
+                      <span>Already have an account? <button type="button" onClick={() => setMode('admin')} className={styles.inlineBtn}>Sign In</button></span>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            ) : (
+              <div className={styles.formContent}>
+                <div className={styles.brandHeader}>
+                  <img src="/nascloud.svg" alt="NasCloud Logo" className={styles.logoImg} />
+                  <h1>Admin Login</h1>
+                </div>
+
+                <div className={styles.formWrapper}>
+                  <h2 className={styles.paneTitle}>Server Administrator</h2>
+                  <p className={styles.paneSubtitle}>Sign in to your Central Server Dashboard</p>
+
+                  <form onSubmit={handleAdminLoginSubmit}>
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>Username</label>
+                      <input
+                        type="text"
+                        className={styles.input}
+                        placeholder="Admin username"
+                        value={adminUsername}
+                        onChange={(e) => setAdminUsername(e.target.value)}
+                        disabled={adminLoading}
+                      />
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>Password</label>
+                      <input
+                        type="password"
+                        className={styles.input}
+                        placeholder="••••••••"
+                        value={adminPassword}
+                        onChange={(e) => setAdminPassword(e.target.value)}
+                        disabled={adminLoading}
+                      />
+                    </div>
+
+                    {adminError && <p className={styles.errorMessage}>{adminError}</p>}
+
+                    <button type="submit" className={styles.primaryBtn} disabled={adminLoading}>
+                      {adminLoading ? 'Logging in...' : 'Login to Dashboard'}
+                    </button>
+
+                    <div className={styles.toggleText}>
+                      <span>New to PersonalDrive? <button type="button" onClick={() => setMode('register')} className={styles.inlineBtn}>Register</button></span>
+                    </div>
+                  </form>
+                </div>
+
+                <div className={styles.switchModeBox}>
+                  <button type="button" onClick={() => setMode('access')} className={styles.secondaryBtn}>
+                    Are you a User?
                   </button>
                 </div>
-              </form>
-            </div>
-
-            <div className={styles.switchModeBox}>
-              <button type="button" onClick={() => setMode('register')} className={styles.glowBtn}>
-                New User? Register here
-              </button>
-            </div>
+              </div>
+            )}
           </div>
-        )}
 
-        {/* ADMIN REGISTER MODE */}
-        {mode === 'register' && (
-          <div className={styles.formContent}>
-            <div className={styles.brandHeader}>
-              <img src="/nascloud.svg" alt="NasCloud Logo" className={styles.logoImg} />
-              <h1>Admin Registration</h1>
-            </div>
-
-            <div className={styles.formWrapper}>
-              <h2 className={styles.paneTitle}>Create Owner Account</h2>
-              <p className={styles.paneSubtitle}>Sign up to the Central Server to generate API Keys</p>
-
-              <form onSubmit={handleRegSubmit}>
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Username</label>
-                  <input
-                    type="text"
-                    className={styles.input}
-                    placeholder="Admin username"
-                    value={regUsername}
-                    onChange={(e) => setRegUsername(e.target.value)}
-                    disabled={regLoading}
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Email Address</label>
-                  <input
-                    type="email"
-                    className={styles.input}
-                    placeholder="name@domain.com"
-                    value={regEmail}
-                    onChange={(e) => setRegEmail(e.target.value)}
-                    disabled={regLoading}
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Password</label>
-                  <input
-                    type="password"
-                    className={styles.input}
-                    placeholder="••••••••"
-                    value={regPassword}
-                    onChange={(e) => setRegPassword(e.target.value)}
-                    disabled={regLoading}
-                  />
-                </div>
-
-                {regError && <p className={styles.errorMessage}>{regError}</p>}
-
-                <button type="submit" className={styles.primaryBtn} disabled={regLoading}>
-                  {regLoading ? 'Registering...' : 'Create Account'}
-                </button>
-
-                <div className={styles.toggleText}>
-                  <span>Already have an account? <button type="button" onClick={() => setMode('admin')} className={styles.inlineBtn}>Sign In</button></span>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* ADMIN LOGIN MODE */}
-        {mode === 'admin' && (
-          <div className={styles.formContent}>
-            <div className={styles.brandHeader}>
-              <img src="/nascloud.svg" alt="NasCloud Logo" className={styles.logoImg} />
-              <h1>Admin Login</h1>
-            </div>
-
-            <div className={styles.formWrapper}>
-              <h2 className={styles.paneTitle}>Server Administrator</h2>
-              <p className={styles.paneSubtitle}>Sign in to your Central Server Dashboard</p>
-
-              <form onSubmit={handleAdminLoginSubmit}>
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Username</label>
-                  <input
-                    type="text"
-                    className={styles.input}
-                    placeholder="Admin username"
-                    value={adminUsername}
-                    onChange={(e) => setAdminUsername(e.target.value)}
-                    disabled={adminLoading}
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Password</label>
-                  <input
-                    type="password"
-                    className={styles.input}
-                    placeholder="••••••••"
-                    value={adminPassword}
-                    onChange={(e) => setAdminPassword(e.target.value)}
-                    disabled={adminLoading}
-                  />
-                </div>
-
-                {adminError && <p className={styles.errorMessage}>{adminError}</p>}
-
-                <button type="submit" className={styles.primaryBtn} disabled={adminLoading}>
-                  {adminLoading ? 'Logging in...' : 'Login to Dashboard'}
-                </button>
-
-                <div className={styles.toggleText}>
-                  <span>New to PersonalDrive? <button type="button" onClick={() => setMode('register')} className={styles.inlineBtn}>Register</button></span>
-                </div>
-              </form>
-            </div>
-
-            <div className={styles.switchModeBox}>
-              <button type="button" onClick={() => setMode('access')} className={styles.secondaryBtn}>
-                Are you a User?
-              </button>
-            </div>
-          </div>
-        )}
-
+        </div>
       </div>
     </div>
   );

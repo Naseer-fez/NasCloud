@@ -1,10 +1,10 @@
 .container {
   position: fixed;
-  bottom: 24px;
-  left: 24px;
+  top: 20px;
+  right: 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   z-index: var(--z-toast);
   pointer-events: none;
 }

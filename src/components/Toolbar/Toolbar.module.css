@@ -1,13 +1,13 @@
 .toolbar {
-  min-height: 76px;
+  min-height: 70px;
   display: grid;
   grid-template-columns: minmax(180px, 1fr) minmax(240px, 380px) auto;
   align-items: center;
   gap: 16px;
-  padding: 14px 24px;
-  background: rgba(12, 18, 29, 0.9);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
-  backdrop-filter: blur(14px);
+  padding: 12px 24px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background-color var(--duration-normal) var(--ease-apple);
 }
 
 .pathGroup {
@@ -18,44 +18,54 @@
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   overflow: hidden;
 }
 
 .crumb {
   max-width: 150px;
-  min-height: 30px;
+  min-height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: flex-start;
   overflow: hidden;
   border: 0;
   background: transparent;
-  color: #b8c2cc;
-  font-size: 14px;
-  font-weight: 700;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--duration-fast);
 }
 
 .crumb:hover {
-  color: #2dd4bf;
-  transform: none;
+  color: var(--accent);
 }
 
 .crumbActive {
-  color: #f7fafc;
+  color: var(--text-primary);
+  cursor: default;
+}
+
+.crumbActive:hover {
+  color: var(--text-primary);
 }
 
 .separator,
 .pathMeta {
-  color: #738195;
+  color: var(--text-tertiary);
+}
+
+.separator {
+  font-size: 11px;
 }
 
 .pathMeta {
   display: block;
-  margin-top: 2px;
-  font-size: 12px;
+  margin-top: 1px;
+  font-size: 11px;
 }
 
 .searchWrapper {
@@ -64,34 +74,39 @@
 }
 
 .searchBar {
-  height: 42px;
+  height: 38px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 0 12px;
-  color: #8fa2b7;
-  background: rgba(255, 255, 255, 0.055);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 8px;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  transition: 
+    border-color var(--duration-fast) var(--ease-apple),
+    box-shadow var(--duration-fast) var(--ease-apple),
+    background var(--duration-fast) var(--ease-apple);
 }
 
 .searchBar:focus-within {
-  border-color: rgba(45, 212, 191, 0.62);
-  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.12);
+  background: var(--bg-elevated);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(81, 105, 100, 0.15);
 }
 
 .searchInput {
   width: 100%;
   padding: 0;
-  color: #f7fafc;
+  color: var(--text-primary);
   background: transparent;
   border: 0;
   outline: 0;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .searchInput::placeholder {
-  color: #738195;
+  color: var(--text-tertiary);
 }
 
 .actions {
@@ -103,28 +118,48 @@
 
 .btnPrimary,
 .btnSecondary {
-  height: 40px;
+  height: 38px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0 14px;
   font-size: 13px;
-  font-weight: 750;
+  font-weight: 600;
   white-space: nowrap;
+  cursor: pointer;
+  transition: 
+    background var(--duration-fast) var(--ease-apple),
+    border-color var(--duration-fast) var(--ease-apple),
+    opacity var(--duration-fast) var(--ease-apple),
+    transform var(--duration-fast) var(--ease-apple);
 }
 
 .btnPrimary {
-  color: #041312;
+  color: #FFFFFF;
   border: 0;
-  background: linear-gradient(135deg, #5eead4, #38bdf8);
+  background: var(--accent-gradient);
+}
+
+.btnPrimary:hover {
+  opacity: 0.9;
+}
+
+.btnPrimary:active,
+.btnSecondary:active {
+  transform: scale(0.97); /* Soft press */
 }
 
 .btnSecondary {
-  color: #f7fafc;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-secondary);
+}
+
+.btnSecondary:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--border-visible);
 }
 
 .dropdownWrapper {
@@ -134,14 +169,15 @@
 .menuDropdown {
   min-width: 184px;
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 6px);
   left: 0;
   z-index: var(--z-dropdown);
-  padding: 6px;
-  background: rgba(15, 23, 42, 0.96);
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  border-radius: 8px;
-  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.34);
+  padding: 4px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  animation: contentAppear var(--duration-fast) var(--ease-apple) forwards;
 }
 
 .rightDropdown {
@@ -151,39 +187,44 @@
 
 .dropdownItem {
   width: 100%;
-  min-height: 38px;
+  min-height: 34px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 10px;
-  padding: 0 10px;
+  gap: 8px;
+  padding: 0 8px;
   border: 0;
-  border-radius: 6px;
-  color: #c7d2df;
+  border-radius: var(--radius-xs);
+  color: var(--text-secondary);
   background: transparent;
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 500;
   text-align: left;
+  cursor: pointer;
+  transition: background var(--duration-fast), color var(--duration-fast);
 }
 
 .dropdownItem:hover {
-  background: rgba(255, 255, 255, 0.07);
-  color: #f7fafc;
-  transform: none;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
 }
 
 .dangerItem {
-  color: #fca5a5;
+  color: var(--danger) !important;
+}
+
+.dangerItem:hover {
+  background: rgba(255, 69, 58, 0.1) !important;
 }
 
 .viewSegment {
-  height: 40px;
+  height: 38px;
   display: inline-flex;
   align-items: center;
-  padding: 3px;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.045);
+  padding: 2px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
 }
 
 .viewSegment button {
@@ -193,27 +234,31 @@
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 6px;
-  color: #8fa2b7;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
   background: transparent;
+  padding: 0;
 }
 
-.viewSegment button:hover,
+.viewSegment button:hover {
+  color: var(--text-primary);
+}
+
 .viewSegment .segmentActive {
-  color: #f7fafc;
-  background: rgba(45, 212, 191, 0.18);
-  transform: none;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-sm);
 }
 
 .avatar {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   padding: 0;
-  border: 1px solid rgba(45, 212, 191, 0.28);
-  border-radius: 50%;
-  color: #061312;
-  background: #5eead4;
-  font-weight: 850;
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-circle);
+  color: #FFFFFF;
+  background: var(--accent);
+  font-weight: 700;
 }
 
 .hiddenInput {
@@ -233,7 +278,7 @@
 
 @media (max-width: 740px) {
   .toolbar {
-    padding: 12px 14px;
+    padding: 12px 16px;
     grid-template-columns: 1fr;
   }
 
@@ -248,12 +293,7 @@
 }
 
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
 .spinning {

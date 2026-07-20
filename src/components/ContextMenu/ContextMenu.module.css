@@ -2,47 +2,49 @@
   min-width: 190px;
   position: fixed;
   z-index: var(--z-dropdown);
-  padding: 6px;
-  background: rgba(15, 23, 42, 0.98);
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  border-radius: 8px;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+  padding: 4px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  animation: contentAppear var(--duration-fast) var(--ease-apple) forwards;
 }
 
 .item {
   width: 100%;
-  min-height: 38px;
+  min-height: 32px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 10px;
+  gap: 8px;
   padding: 0 10px;
   border: 0;
-  border-radius: 6px;
-  color: #c7d2df;
+  border-radius: var(--radius-xs);
+  color: var(--text-secondary);
   background: transparent;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   text-align: left;
+  cursor: pointer;
+  transition: background var(--duration-fast), color var(--duration-fast);
 }
 
 .item:hover {
-  color: #f7fafc;
-  background: rgba(45, 212, 191, 0.1);
-  transform: none;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
 }
 
 .divider {
   height: 1px;
-  margin: 6px 4px;
-  background: rgba(148, 163, 184, 0.16);
+  margin: 4px 6px;
+  background: var(--border-subtle);
 }
 
 .danger {
-  color: #fca5a5;
+  color: var(--danger);
 }
 
 .danger:hover {
-  color: #fecaca;
-  background: rgba(248, 113, 113, 0.12);
+  color: #FFFFFF;
+  background: var(--danger) !important;
 }

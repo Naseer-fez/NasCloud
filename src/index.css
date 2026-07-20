@@ -1,72 +1,7 @@
-/* ==========================================================================
-   NasCloud Premium Dark-Themed Glassmorphic CSS Design System
-   ========================================================================== */
-
-:root {
-  /* ---- Colors ---- */
-  --color-bg-base: #0a0f1d;
-  --color-bg-base-to: #0d1326;
-  
-  --color-text-primary: rgba(255, 255, 255, 0.95);
-  --color-text-secondary: rgba(148, 163, 184, 0.85);
-  --color-text-muted: rgba(148, 163, 184, 0.55);
-  --color-text-accent: #38bdf8;
-  
-  /* ---- Semantic Colors ---- */
-  --color-success: #34d399;
-  --color-error: #f87171;
-  --color-warning: #fbbf24;
-  --color-info: #60a5fa;
-
-  /* ---- Glassmorphism Variables ---- */
-  --glass-bg: rgba(22, 28, 45, 0.45);
-  --glass-bg-hover: rgba(255, 255, 255, 0.05);
-  --glass-bg-active: rgba(255, 255, 255, 0.08);
-  --glass-border: rgba(255, 255, 255, 0.06);
-  --glass-border-active: rgba(56, 189, 248, 0.35);
-  --glass-blur: 12px;
-  --glass-blur-heavy: 20px;
-  
-  /* ---- Accent Gradients ---- */
-  --gradient-accent-1: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
-  --gradient-accent-2: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
-  --gradient-dark: linear-gradient(180deg, var(--color-bg-base) 0%, var(--color-bg-base-to) 100%);
-  
-  /* ---- Typography ---- */
-  --font-headings: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-
-  /* ---- Shadow & Glow ---- */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
-  --shadow-glow-cyan: 0 0 15px rgba(0, 242, 254, 0.3);
-  --shadow-glow-purple: 0 0 15px rgba(161, 140, 209, 0.3);
-  
-  /* ---- Borders & Radius ---- */
-  --radius-xs: 4px;
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-circle: 50%;
-  
-  /* ---- Transitions ---- */
-  --transition-fast: 0.15s ease;
-  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* ---- Z-indices ---- */
-  --z-base: 1;
-  --z-sidebar: 100;
-  --z-toolbar: 90;
-  --z-dropdown: 200;
-  --z-modal-backdrop: 300;
-  --z-modal: 310;
-  --z-toast: 400;
-}
+@import './styles/variables.css';
 
 /* ==========================================================================
-   Global Reset & Defaults
+   NasCloud Premium Apple-Forest Reset & Global Base
    ========================================================================== */
 
 * {
@@ -76,56 +11,55 @@
 }
 
 body {
-  font-family: var(--font-body);
-  background-color: var(--color-bg-base);
-  background-image: var(--gradient-dark);
-  background-attachment: fixed;
-  color: var(--color-text-primary);
+  font-family: var(--font);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--duration-normal) var(--ease-apple), color var(--duration-normal) var(--ease-apple);
 }
 
-/* Custom Scrollbars */
+/* ==========================================================================
+   Apple-Style Minimal Scrollbars
+   ========================================================================== */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.15);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: var(--radius-sm);
+  background: rgba(81, 105, 100, 0.25); /* Subtle brand color tint */
+  border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background var(--duration-fast);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--accent);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideUp {
-  from { transform: translateY(15px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-@keyframes pulseSlow {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 0.35; }
-}
-
+/* Utility Animations */
 .animate-fade {
-  animation: fadeIn var(--transition-normal) forwards;
+  animation: contentAppear var(--duration-normal) var(--ease-apple) forwards;
 }
 
 .animate-slide-up {
-  animation: slideUp var(--transition-normal) forwards;
+  animation: contentAppear var(--duration-slow) var(--ease-apple) forwards;
+}
+
+/* Click/Touch Spring Effects */
+.soft-press {
+  transition: transform var(--duration-fast) var(--ease-apple);
+}
+.soft-press:active {
+  transform: scale(0.97);
 }

@@ -1,9 +1,9 @@
 .backdrop {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(10, 15, 29, 0.75);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -11,73 +11,73 @@
 }
 
 .modal {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: 24px;
   width: 100%;
   max-width: 440px;
-  box-shadow: var(--shadow-lg), var(--shadow-glow-cyan);
-  animation: scaleUp 0.2s ease-out;
+  box-shadow: var(--shadow-xl);
+  animation: modalPresent var(--duration-normal) var(--ease-apple) forwards;
   display: flex;
   flex-direction: column;
 }
 
 .modal h3 {
-  font-family: var(--font-headings);
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--color-text-primary);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
   margin-bottom: 4px;
+  letter-spacing: -0.01em;
 }
 
 .subtitle {
-  font-size: 13px;
-  color: var(--color-text-secondary);
+  font-size: 12px;
+  color: var(--text-secondary);
   margin-bottom: 16px;
 }
 
 .treeContainer {
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  padding: 8px 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 6px 0;
   max-height: 240px;
   overflow-y: auto;
   margin-bottom: 12px;
 }
 
 .treeRow {
-  height: 34px;
+  height: 32px;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 16px;
+  padding: 0 12px;
   cursor: pointer;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   font-size: 13px;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition: background var(--duration-fast), color var(--duration-fast);
 }
 
 .treeRow:hover {
-  background: var(--glass-bg-hover);
-  color: var(--color-text-primary);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 .selectedRow {
-  background: rgba(56, 189, 248, 0.1) !important;
-  color: var(--color-text-primary);
-  border-left: 3px solid var(--color-text-accent);
+  background: rgba(81, 105, 100, 0.15) !important;
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
 .chevron {
   font-size: 10px;
-  color: var(--color-text-muted);
+  color: var(--text-tertiary);
   cursor: pointer;
   width: 12px;
   display: inline-flex;
   justify-content: center;
-  transition: transform var(--transition-fast);
+  transition: transform var(--duration-fast);
 }
 
 .chevron.open {
@@ -90,6 +90,7 @@
 
 .folderIcon {
   font-size: 14px;
+  color: var(--accent);
 }
 
 .folderName {
@@ -100,7 +101,7 @@
 
 .error {
   font-size: 12px;
-  color: var(--color-error);
+  color: var(--danger);
   margin-bottom: 12px;
 }
 
@@ -112,34 +113,44 @@
 }
 
 .btnCancel {
-  height: 38px;
+  height: 36px;
   padding: 0 16px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: transparent;
-  border: 1px solid var(--glass-border);
-  color: var(--color-text-secondary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
   font-weight: 500;
   font-size: 13px;
   cursor: pointer;
+  transition: background var(--duration-fast);
 }
 
 .btnCancel:hover {
-  background: var(--glass-bg-hover);
-  color: var(--color-text-primary);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.btnCancel:active {
+  transform: scale(0.97);
 }
 
 .btnSubmit {
-  height: 38px;
+  height: 36px;
   padding: 0 16px;
-  border-radius: var(--radius-sm);
-  background: var(--gradient-accent-1);
+  border-radius: var(--radius-md);
+  background: var(--accent-gradient);
   border: none;
-  color: #050a15;
+  color: #FFFFFF;
   font-weight: 600;
   font-size: 13px;
   cursor: pointer;
+  transition: opacity var(--duration-fast);
 }
 
 .btnSubmit:hover {
-  box-shadow: var(--shadow-glow-cyan);
+  opacity: 0.9;
+}
+
+.btnSubmit:active {
+  transform: scale(0.97);
 }

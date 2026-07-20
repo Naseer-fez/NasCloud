@@ -1,23 +1,177 @@
 :root {
-  --bg: #0a0f1d;
-  --bg-2: #121827;
-  --panel: rgba(22, 28, 45, 0.68);
-  --panel-strong: rgba(18, 24, 39, 0.94);
-  --surface: #182034;
-  --surface-2: #202a44;
-  --text: rgba(255, 255, 255, 0.94);
-  --muted: #94a3b8;
-  --faint: #64748b;
-  --border: rgba(255, 255, 255, 0.1);
-  --accent: #38bdf8;
-  --accent-2: #a78bfa;
-  --success: #34d399;
-  --danger: #f87171;
-  --warning: #fbbf24;
-  --info: #60a5fa;
-  --gradient: linear-gradient(135deg, #00d5ff 0%, #8b5cf6 100%);
-  --radius: 8px;
-  --shadow-lg: 0 24px 80px rgba(0, 0, 0, 0.36);
-  --font-body: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-heading: Outfit, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* ==========================================
+     Forest Dark Theme (Default)
+     ========================================== */
+  --bg-primary: #1F2A1D;
+  --bg-elevated: #2A3B27;
+  --bg-secondary: #354A31;
+  --bg-tertiary: #3F5A3A;
+  --bg-sidebar: #122514;
+
+  --text-primary: #F5F5F7;
+  --text-secondary: #A1A6A1;
+  --text-tertiary: #6E736E;
+
+  --accent: #516964;
+  --accent-hover: #5F7B75;
+  --accent-gradient: linear-gradient(135deg, #516964 0%, #3B4E4A 100%);
+
+  /* Semantic Colors */
+  --success: #30D158;
+  --danger: #FF453A;
+  --warning: #FFD60A;
+  --info: #64D2FF;
+
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-visible: rgba(255, 255, 255, 0.15);
+  --border-accent: rgba(81, 105, 100, 0.4);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.5);
+  --shadow-xl: 0 24px 60px rgba(0,0,0,0.6);
+
+  /* Radius */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+  --radius-circle: 50%;
+
+  /* Transitions */
+  --ease-apple: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 350ms;
+
+  /* Z-Indices */
+  --z-base: 1;
+  --z-sidebar: 100;
+  --z-toolbar: 90;
+  --z-dropdown: 200;
+  --z-modal-backdrop: 300;
+  --z-modal: 310;
+  --z-toast: 400;
+
+  /* ==========================================
+     Compatibility Mappings (Variables System)
+     ========================================== */
+  --bg: var(--bg-primary);
+  --bg-2: var(--bg-sidebar);
+  --panel: var(--bg-elevated);
+  --panel-strong: var(--bg-elevated);
+  --surface: var(--bg-secondary);
+  --surface-2: var(--bg-tertiary);
+  
+  --text: var(--text-primary);
+  --muted: var(--text-secondary);
+  --faint: var(--text-tertiary);
+  --border: var(--border-subtle);
+  --accent-2: #7A9A93;
+  --gradient: var(--accent-gradient);
+  --radius: var(--radius-md);
+
+  /* Compatibility Mappings (Index/Glass System) */
+  --color-bg-base: var(--bg-primary);
+  --color-bg-base-to: var(--bg-sidebar);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-tertiary);
+  --color-text-accent: var(--accent);
+  --color-success: var(--success);
+  --color-error: var(--danger);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+
+  --glass-bg: var(--bg-elevated);
+  --glass-bg-hover: rgba(255, 255, 255, 0.05);
+  --glass-bg-active: rgba(255, 255, 255, 0.08);
+  --glass-border: var(--border-subtle);
+  --glass-border-active: var(--border-accent);
+  --glass-blur: 20px;
+  --glass-blur-heavy: 30px;
+
+  --gradient-accent-1: var(--accent-gradient);
+  --gradient-accent-2: linear-gradient(135deg, #7A9A93 0%, #516964 100%);
+  --gradient-dark: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-sidebar) 100%);
+
+  --font-headings: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --shadow-glow-cyan: 0 0 15px rgba(81, 105, 100, 0.15);
+  --shadow-glow-purple: 0 0 15px rgba(81, 105, 100, 0.1);
+  --transition-fast: var(--duration-fast) ease;
+  --transition-normal: var(--duration-normal) var(--ease-apple);
+  --transition-slow: var(--duration-slow) var(--ease-apple);
+}
+
+/* ==========================================
+   Sage Mist Light Theme
+   ========================================== */
+[data-theme="light"] {
+  --bg-primary: #F4F7F3;
+  --bg-elevated: #FFFFFF;
+  --bg-secondary: #EAF0E8;
+  --bg-tertiary: #D1DBCE;
+  --bg-sidebar: #E8EFE6;
+
+  --text-primary: #1A1A1A;
+  --text-secondary: #6B6B6B;
+  --text-tertiary: #999999;
+
+  --accent: #516964;
+  --accent-hover: #40534F;
+  --accent-gradient: linear-gradient(135deg, #516964 0%, #3B4E4A 100%);
+
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-visible: rgba(0, 0, 0, 0.12);
+  --border-accent: rgba(81, 105, 100, 0.3);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+  --shadow-xl: 0 24px 60px rgba(0,0,0,0.15);
+
+  --glass-bg-hover: rgba(0, 0, 0, 0.03);
+  --glass-bg-active: rgba(0, 0, 0, 0.05);
+
+  --shadow-glow-cyan: 0 0 15px rgba(81, 105, 100, 0.1);
+  --shadow-glow-purple: 0 0 15px rgba(81, 105, 100, 0.05);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg-primary: #F4F7F3;
+    --bg-elevated: #FFFFFF;
+    --bg-secondary: #EAF0E8;
+    --bg-tertiary: #D1DBCE;
+    --bg-sidebar: #E8EFE6;
+
+    --text-primary: #1A1A1A;
+    --text-secondary: #6B6B6B;
+    --text-tertiary: #999999;
+
+    --accent: #516964;
+    --accent-hover: #40534F;
+    --accent-gradient: linear-gradient(135deg, #516964 0%, #3B4E4A 100%);
+
+    --border-subtle: rgba(0, 0, 0, 0.06);
+    --border-visible: rgba(0, 0, 0, 0.12);
+    --border-accent: rgba(81, 105, 100, 0.3);
+
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+    --shadow-xl: 0 24px 60px rgba(0,0,0,0.15);
+
+    --glass-bg-hover: rgba(0, 0, 0, 0.03);
+    --glass-bg-active: rgba(0, 0, 0, 0.05);
+
+    --shadow-glow-cyan: 0 0 15px rgba(81, 105, 100, 0.1);
+    --shadow-glow-purple: 0 0 15px rgba(81, 105, 100, 0.05);
+  }
 }
