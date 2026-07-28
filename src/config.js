@@ -14,6 +14,7 @@ export const MAIN_USERNAME_KEY = 'main_username';
 export const MAIN_PASSWORD_KEY = 'main_password';
 export const MAIN_API_KEY_STORAGE = 'main_api_key';
 export const MAIN_ACCESS_CODE_KEY = 'main_access_code';
+export const MAIN_TOKEN_KEY = 'main_token';
 export const STRUCTURE_CACHE_KEY = 'structure_cache';
 export const HOME_FOLDERS_CACHE_KEY = 'home_folders_cache';
 export const STORAGE_STATS_CACHE_KEY = 'storage_stats_cache';

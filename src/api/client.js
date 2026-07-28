@@ -1,4 +1,4 @@
-import { AUTH_TOKEN_KEY, AUTH_USER_ID_KEY, MAIN_ACCESS_CODE_KEY } from '../config';
+import { AUTH_TOKEN_KEY, AUTH_USER_ID_KEY, MAIN_ACCESS_CODE_KEY, MAIN_TOKEN_KEY } from '../config';
 import { BACKEND_SERVER_ERROR_MESSAGE, buildBackendUrl, saveBackendUrl, isMainServerUrl } from './backendUrl';
 import { API_BASE_URL } from '../config';
 import { centralResolve } from './centralServer';
@@ -196,11 +196,11 @@ export async function apiCall(path, options = {}) {
     if (!shouldRetry) throw error;
 
     const accessCode = localStorage.getItem(MAIN_ACCESS_CODE_KEY);
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    if (!accessCode || !token) throw error;
+    const mainToken = localStorage.getItem(MAIN_TOKEN_KEY) || localStorage.getItem(AUTH_TOKEN_KEY);
+    if (!accessCode || !mainToken) throw error;
 
     try {
-      const resolved = await centralResolve(API_BASE_URL, accessCode, token);
+      const resolved = await centralResolve(API_BASE_URL, accessCode, mainToken);
       if (resolved?.server_url) {
         saveBackendUrl(resolved.server_url);
         logFez('Re-resolved backend URL after network failure', resolved.server_url);

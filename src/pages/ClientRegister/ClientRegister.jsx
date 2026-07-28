@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { AUTH_TOKEN_KEY, ALLOW_USERS_KEY } from '../../config';
+import { AUTH_TOKEN_KEY, ALLOW_USERS_KEY, MAIN_TOKEN_KEY } from '../../config';
 import { BACKEND_SERVER_ERROR_MESSAGE, getBackendUrl, hasBackendUrl } from '../../api/backendUrl';
 import { logFez } from '../../utils/testLogger';
 import styles from './ClientRegister.module.css';
@@ -89,7 +89,7 @@ export default function ClientRegister() {
 
   const handleSkip = () => {
     // Use default user — the token from the main server login is already stored
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    const token = localStorage.getItem(MAIN_TOKEN_KEY) || localStorage.getItem(AUTH_TOKEN_KEY);
     if (token) {
       login(token, 1);
       navigate('/');

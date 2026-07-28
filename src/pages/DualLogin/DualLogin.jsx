@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { API_BASE_URL, ALLOW_USERS_KEY, AUTH_TOKEN_KEY, MAIN_USERNAME_KEY, MAIN_PASSWORD_KEY, MAIN_API_KEY_STORAGE, MAIN_ACCESS_CODE_KEY, SINGLE_USER_ID } from '../../config';
+import { API_BASE_URL, ALLOW_USERS_KEY, AUTH_TOKEN_KEY, MAIN_USERNAME_KEY, MAIN_PASSWORD_KEY, MAIN_API_KEY_STORAGE, MAIN_ACCESS_CODE_KEY, MAIN_TOKEN_KEY, SINGLE_USER_ID } from '../../config';
 import { saveBackendUrl } from '../../api/backendUrl';
 import { logFez } from '../../utils/testLogger';
 import styles from './DualLogin.module.css';
@@ -113,6 +113,7 @@ export default function DualLogin() {
 
       // 3. Store backend URL and allowusers flag
       localStorage.setItem(MAIN_ACCESS_CODE_KEY, accessCode.trim());
+      localStorage.setItem(MAIN_TOKEN_KEY, token);
       localStorage.setItem(ALLOW_USERS_KEY, String(!!allowUsers));
       logFez('Main server resolved backend URL', { backendUrl, allowUsers });
 

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { AUTH_TOKEN_KEY, AUTH_USER_ID_KEY, MAIN_ACCESS_CODE_KEY } from '../config';
+import { AUTH_TOKEN_KEY, AUTH_USER_ID_KEY, MAIN_ACCESS_CODE_KEY, MAIN_TOKEN_KEY } from '../config';
 import { API_BASE_URL } from '../config';
 import { centralResolve } from '../api/centralServer';
 import { saveBackendUrl } from '../api/backendUrl';
@@ -77,7 +77,8 @@ export function AuthProvider({ children }) {
       if (!accessCode) return;
 
       try {
-        const result = await centralResolve(API_BASE_URL, accessCode, state.token || '');
+        const mainToken = localStorage.getItem(MAIN_TOKEN_KEY) || state.token || '';
+        const result = await centralResolve(API_BASE_URL, accessCode, mainToken);
         if (cancelled || !result?.server_url) return;
         const savedUrl = saveBackendUrl(result.server_url);
         logFez('Refreshed backend URL on app startup', { savedUrl });
