@@ -58,7 +58,17 @@ export default function FileList({
   onNavigate,
   onFileClick,
   selectedId,
+  selectedIds = [],
+  onItemClick,
+  onItemDoubleClick,
 }) {
+  const isSelected = (item) => {
+    const id = item.id || item.path || item.name;
+    if (Array.isArray(selectedIds)) return selectedIds.includes(id);
+    if (selectedIds instanceof Set) return selectedIds.has(id);
+    return selectedId === id;
+  };
+
   const sortedFiles = useMemo(() => {
     return [...files].sort((a, b) => {
       const aFolder = isFolder(a);
@@ -69,9 +79,22 @@ export default function FileList({
     });
   }, [files]);
 
-  const handleItemClick = (event, item) => {
+  const handleSingleClick = (event, item) => {
     event.stopPropagation();
-    if (isFolder(item)) {
+    if (onItemClick) {
+      onItemClick(event, item);
+    } else if (isFolder(item)) {
+      onNavigate(itemPath(item, currentPath));
+    } else {
+      onFileClick(item);
+    }
+  };
+
+  const handleDoubleClick = (event, item) => {
+    event.stopPropagation();
+    if (onItemDoubleClick) {
+      onItemDoubleClick(event, item);
+    } else if (isFolder(item)) {
       onNavigate(itemPath(item, currentPath));
     } else {
       onFileClick(item);
@@ -96,14 +119,15 @@ export default function FileList({
       <div className={styles.gridContainer}>
         {sortedFiles.map((item) => {
           const id = item.id || item.path || item.name;
-          const selected = selectedId === id;
+          const selected = isSelected(item);
           const folder = isFolder(item);
 
           return (
             <div
               key={id}
               className={`${styles.gridCard} ${selected ? styles.selected : ''}`}
-              onClick={(event) => handleItemClick(event, item)}
+              onClick={(event) => handleSingleClick(event, item)}
+              onDoubleClick={(event) => handleDoubleClick(event, item)}
               onContextMenu={(event) => handleContextClick(event, item)}
             >
               <button
@@ -136,13 +160,14 @@ export default function FileList({
         {sortedFiles.map((item) => {
           const id = item.id || item.path || item.name;
           const folder = isFolder(item);
-          const selected = selectedId === id;
+          const selected = isSelected(item);
 
           return (
             <div
               key={id}
               className={`${styles.row} ${selected ? styles.selected : ''}`}
-              onClick={(event) => handleItemClick(event, item)}
+              onClick={(event) => handleSingleClick(event, item)}
+              onDoubleClick={(event) => handleDoubleClick(event, item)}
               onContextMenu={(event) => handleContextClick(event, item)}
             >
               <div className={styles.colName}>

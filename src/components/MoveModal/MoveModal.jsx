@@ -4,7 +4,7 @@ import { useToast } from '../../context/ToastContext';
 import { getStructure, moveFile } from '../../api/endpoints';
 import styles from './MoveModal.module.css';
 
-export default function MoveModal({ isOpen, onClose, item, onSuccess }) {
+export default function MoveModal({ isOpen, onClose, item, items = [], onSuccess }) {
   const { userid } = useAuth();
   const { addToast } = useToast();
   const [folders, setFolders] = useState([]);
@@ -14,9 +14,11 @@ export default function MoveModal({ isOpen, onClose, item, onSuccess }) {
   const [selectedPath, setSelectedPath] = useState(''); // '' is Home (root)
   const [expandedFolders, setExpandedFolders] = useState({});
 
+  const itemList = items.length > 0 ? items : item ? [item] : [];
+
   const extractFolders = useCallback((data) => {
-    const items = Array.isArray(data) ? data : data?.children || data?.items || [];
-    return items
+    const rawItems = Array.isArray(data) ? data : data?.children || data?.items || [];
+    return rawItems
       .filter((i) => i.type === 'folder' || i.type === 'directory' || !!i.children)
       .map((folder) => ({
         name: folder.name,
@@ -46,7 +48,7 @@ export default function MoveModal({ isOpen, onClose, item, onSuccess }) {
     loadFolders();
   }, [loadFolders]);
 
-  if (!isOpen || !item) return null;
+  if (!isOpen || itemList.length === 0) return null;
 
   const toggleExpand = (id) => {
     setExpandedFolders((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -56,18 +58,21 @@ export default function MoveModal({ isOpen, onClose, item, onSuccess }) {
     setMoving(true);
     setError('');
     try {
-      // oldpath is item.path
-      // newpath is selectedPath + filename
-      const targetPath = selectedPath ? `${selectedPath}/${item.name}` : item.name;
-      if (item.path === selectedPath || item.path === targetPath) {
-        throw new Error('Destination folder cannot be the same as current folder.');
+      let movedCount = 0;
+      for (const currentItem of itemList) {
+        const targetPath = selectedPath ? `${selectedPath}/${currentItem.name}` : currentItem.name;
+        if (currentItem.path !== selectedPath && currentItem.path !== targetPath) {
+          await moveFile(userid, currentItem.path, targetPath);
+          movedCount += 1;
+        }
       }
-      await moveFile(userid, item.path, targetPath);
-      addToast(`Moved "${item.name}" successfully.`, 'success');
-      onSuccess();
+      if (movedCount > 0) {
+        addToast(`Moved ${movedCount} item(s) successfully.`, 'success');
+        onSuccess();
+      }
       onClose();
     } catch (err) {
-      setError(err.message || 'Failed to move item.');
+      setError(err.message || 'Failed to move items.');
     } finally {
       setMoving(false);
     }
@@ -113,7 +118,7 @@ export default function MoveModal({ isOpen, onClose, item, onSuccess }) {
   return (
     <div className={styles.backdrop} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className={styles.modal}>
-        <h3>Move "{item.name}"</h3>
+        <h3>Move {itemList.length === 1 ? `"${itemList[0].name}"` : `${itemList.length} items`}</h3>
         <p className={styles.subtitle}>Select destination directory:</p>
 
         <div className={styles.treeContainer}>

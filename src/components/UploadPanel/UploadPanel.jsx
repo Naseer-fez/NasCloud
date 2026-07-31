@@ -44,118 +44,245 @@ export default function UploadPanel() {
     setUploads((prev) => prev.filter((upload) => upload.id !== id));
   }, []);
 
+  const executeUploadTask = useCallback((upload, file, isRetry = false) => {
+    const formData = new FormData();
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    const uploadDirectory = upload.directory || '/';
+    let url = '';
+
+    try {
+      url = buildBackendUrl(`uploadfile/${userid}`);
+      if (isMainServerUrl(url)) {
+        throw new Error(BACKEND_SERVER_ERROR_MESSAGE);
+      }
+      formData.append('directory', uploadDirectory);
+      formData.append('filepath', file, file.name);
+    } catch (error) {
+      if (!isRetry) {
+        tryResolveBackendUrl(token).then((newUrl) => {
+          if (newUrl) {
+            logFez('Re-resolved backend URL before file upload after build error', newUrl);
+            executeUploadTask(upload, file, true);
+          } else {
+            setUploads((prev) => prev.map((item) => (
+              item.id === upload.id ? { ...item, status: 'error' } : item
+            )));
+            addToast(error.message || BACKEND_SERVER_ERROR_MESSAGE, 'error');
+          }
+        });
+        return;
+      }
+      setUploads((prev) => prev.map((item) => (
+        item.id === upload.id ? { ...item, status: 'error' } : item
+      )));
+      addToast(error.message || BACKEND_SERVER_ERROR_MESSAGE, 'error');
+      logFez('Upload request could not resolve backend URL', error.message);
+      return;
+    }
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    if (shouldSendNgrokHeader(url)) xhr.setRequestHeader('ngrok-skip-browser-warning', '69420');
+    if (token && String(userid) !== '0') xhr.setRequestHeader('auth', token);
+
+    activeXHRs.current[upload.id] = xhr;
+    logFez('Upload request started', { url, filename: upload.name, isRetry });
+
+    xhr.upload.onprogress = (event) => {
+      if (!event.lengthComputable) return;
+      const progress = Math.round((event.loaded / event.total) * 100);
+      setUploads((prev) => prev.map((item) => (
+        item.id === upload.id ? { ...item, progress } : item
+      )));
+    };
+
+    const handleNetworkOrBackendError = async (defaultErrorMsg) => {
+      delete activeXHRs.current[upload.id];
+      if (!isRetry) {
+        const newUrl = await tryResolveBackendUrl(token);
+        if (newUrl) {
+          logFez('Re-resolved backend URL after file upload network/server error, retrying', newUrl);
+          executeUploadTask(upload, file, true);
+          return;
+        }
+      }
+      setUploads((prev) => prev.map((item) => (
+        item.id === upload.id ? { ...item, status: 'error' } : item
+      )));
+      addToast(defaultErrorMsg, 'error');
+      logFez('Upload request failed permanently', { url, filename: upload.name, errorMsg: defaultErrorMsg });
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        delete activeXHRs.current[upload.id];
+        setUploads((prev) => prev.map((item) => (
+          item.id === upload.id ? { ...item, status: 'success', progress: 100 } : item
+        )));
+        addToast(`Uploaded "${upload.name}".`, 'success');
+        refreshStructureAfterMutation(userid, 'upload');
+        return;
+      }
+
+      if (xhr.status === 0 || xhr.status === 502 || xhr.status === 503 || xhr.status === 504) {
+        handleNetworkOrBackendError(`${BACKEND_SERVER_ERROR_MESSAGE} Upload failed for "${upload.name}".`);
+        return;
+      }
+
+      delete activeXHRs.current[upload.id];
+      let errorMsg = 'Upload failed.';
+      try {
+        const response = JSON.parse(xhr.responseText);
+        errorMsg = response.return || response.message || errorMsg;
+      } catch {}
+      setUploads((prev) => prev.map((item) => (
+        item.id === upload.id ? { ...item, status: 'error' } : item
+      )));
+      addToast(`Upload failed for "${upload.name}": ${errorMsg}`, 'error');
+      logFez('Upload request failed', { url, status: xhr.status, errorMsg });
+    };
+
+    xhr.onerror = () => {
+      handleNetworkOrBackendError(`${BACKEND_SERVER_ERROR_MESSAGE} Upload failed for "${upload.name}".`);
+    };
+
+    xhr.send(formData);
+  }, [userid, addToast]);
+
   const startUpload = useCallback((file, directory) => {
+    const uploadName = file.webkitRelativePath || file.name;
+    const uploadDir = directory || '/';
+
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const upload = {
       id,
-      name: file.webkitRelativePath || file.name,
+      name: uploadName,
+      directory: uploadDir,
       progress: 0,
       status: 'uploading',
     };
 
-    setUploads((prev) => [upload, ...prev]);
+    setUploads((prev) => {
+      const isDuplicate = prev.some(
+        (u) => u.name === uploadName && u.directory === uploadDir && u.status === 'uploading'
+      );
+      if (isDuplicate) {
+        addToast(`"${uploadName}" is already uploading.`, 'info');
+        return prev;
+      }
+
+      executeUploadTask(upload, file);
+      return [upload, ...prev];
+    });
     setIsOpen(true);
+  }, [addToast, executeUploadTask]);
 
-    const executeUpload = async (isRetry = false) => {
-      const formData = new FormData();
-      const token = localStorage.getItem(AUTH_TOKEN_KEY);
-      const uploadDirectory = directory || '/';
-      let url = '';
+  const executeFolderUploadTask = useCallback((upload, fileList, isRetry = false) => {
+    const formData = new FormData();
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    const uploadDirectory = upload.directory || '/';
+    const rootName = upload.name;
+    let url = '';
 
-      try {
-        url = buildBackendUrl(`uploadfile/${userid}`);
-        if (isMainServerUrl(url)) {
-          throw new Error(BACKEND_SERVER_ERROR_MESSAGE);
-        }
-        formData.append('directory', uploadDirectory);
-        formData.append('filepath', file, file.name);
-      } catch (error) {
-        if (!isRetry) {
-          const newUrl = await tryResolveBackendUrl(token);
+    try {
+      url = buildBackendUrl(`uploadfolder/${userid}/`);
+      if (isMainServerUrl(url)) {
+        throw new Error(BACKEND_SERVER_ERROR_MESSAGE);
+      }
+      formData.append('directory', uploadDirectory);
+      fileList.forEach((file) => {
+        formData.append('files', file, file.webkitRelativePath || file.name);
+      });
+    } catch (error) {
+      if (!isRetry) {
+        tryResolveBackendUrl(token).then((newUrl) => {
           if (newUrl) {
-            logFez('Re-resolved backend URL before file upload after build error', newUrl);
-            executeUpload(true);
-            return;
+            logFez('Re-resolved backend URL before folder upload after build error', newUrl);
+            executeFolderUploadTask(upload, fileList, true);
+          } else {
+            setUploads((prev) => prev.map((item) => (
+              item.id === upload.id ? { ...item, status: 'error' } : item
+            )));
+            addToast(error.message || BACKEND_SERVER_ERROR_MESSAGE, 'error');
           }
+        });
+        return;
+      }
+      setUploads((prev) => prev.map((item) => (
+        item.id === upload.id ? { ...item, status: 'error' } : item
+      )));
+      addToast(error.message || BACKEND_SERVER_ERROR_MESSAGE, 'error');
+      logFez('Folder upload request could not resolve backend URL', error.message);
+      return;
+    }
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    if (shouldSendNgrokHeader(url)) xhr.setRequestHeader('ngrok-skip-browser-warning', '69420');
+    if (token && String(userid) !== '0') xhr.setRequestHeader('auth', token);
+
+    activeXHRs.current[upload.id] = xhr;
+    logFez('Folder upload request started', { url, fileCount: fileList.length, folder: rootName, isRetry });
+
+    xhr.upload.onprogress = (event) => {
+      if (!event.lengthComputable) return;
+      const progress = Math.round((event.loaded / event.total) * 100);
+      setUploads((prev) => prev.map((item) => (
+        item.id === upload.id ? { ...item, progress } : item
+      )));
+    };
+
+    const handleNetworkOrBackendError = async (defaultErrorMsg) => {
+      delete activeXHRs.current[upload.id];
+      if (!isRetry) {
+        const newUrl = await tryResolveBackendUrl(token);
+        if (newUrl) {
+          logFez('Re-resolved backend URL after folder upload network/server error, retrying', newUrl);
+          executeFolderUploadTask(upload, fileList, true);
+          return;
         }
+      }
+      setUploads((prev) => prev.map((item) => (
+        item.id === upload.id ? { ...item, status: 'error' } : item
+      )));
+      addToast(defaultErrorMsg, 'error');
+      logFez('Folder upload request failed permanently', { url, folder: rootName, errorMsg: defaultErrorMsg });
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        delete activeXHRs.current[upload.id];
         setUploads((prev) => prev.map((item) => (
-          item.id === id ? { ...item, status: 'error' } : item
+          item.id === upload.id ? { ...item, status: 'success', progress: 100 } : item
         )));
-        addToast(error.message || BACKEND_SERVER_ERROR_MESSAGE, 'error');
-        logFez('Upload request could not resolve backend URL', error.message);
+        addToast(`Uploaded folder "${rootName}".`, 'success');
+        refreshStructureAfterMutation(userid, 'upload-folder');
         return;
       }
 
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', url);
-      if (shouldSendNgrokHeader(url)) xhr.setRequestHeader('ngrok-skip-browser-warning', '69420');
-      if (token && String(userid) !== '0') xhr.setRequestHeader('auth', token);
+      if (xhr.status === 0 || xhr.status === 502 || xhr.status === 503 || xhr.status === 504) {
+        handleNetworkOrBackendError(`${BACKEND_SERVER_ERROR_MESSAGE} Upload failed for "${rootName}".`);
+        return;
+      }
 
-      activeXHRs.current[id] = xhr;
-      logFez('Upload request started', { url, filename: upload.name, isRetry });
-
-      xhr.upload.onprogress = (event) => {
-        if (!event.lengthComputable) return;
-        const progress = Math.round((event.loaded / event.total) * 100);
-        setUploads((prev) => prev.map((item) => (
-          item.id === id ? { ...item, progress } : item
-        )));
-      };
-
-      const handleNetworkOrBackendError = async (defaultErrorMsg) => {
-        delete activeXHRs.current[id];
-        if (!isRetry) {
-          const newUrl = await tryResolveBackendUrl(token);
-          if (newUrl) {
-            logFez('Re-resolved backend URL after file upload network/server error, retrying', newUrl);
-            executeUpload(true);
-            return;
-          }
-        }
-        setUploads((prev) => prev.map((item) => (
-          item.id === id ? { ...item, status: 'error' } : item
-        )));
-        addToast(defaultErrorMsg, 'error');
-        logFez('Upload request failed permanently', { url, filename: upload.name, errorMsg: defaultErrorMsg });
-      };
-
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          delete activeXHRs.current[id];
-          setUploads((prev) => prev.map((item) => (
-            item.id === id ? { ...item, status: 'success', progress: 100 } : item
-          )));
-          addToast(`Uploaded "${upload.name}".`, 'success');
-          refreshStructureAfterMutation(userid, 'upload');
-          return;
-        }
-
-        if (xhr.status === 0 || xhr.status === 502 || xhr.status === 503 || xhr.status === 504) {
-          handleNetworkOrBackendError(`${BACKEND_SERVER_ERROR_MESSAGE} Upload failed for "${upload.name}".`);
-          return;
-        }
-
-        delete activeXHRs.current[id];
-        let errorMsg = 'Upload failed.';
-        try {
-          const response = JSON.parse(xhr.responseText);
-          errorMsg = response.return || response.message || errorMsg;
-        } catch {}
-        setUploads((prev) => prev.map((item) => (
-          item.id === id ? { ...item, status: 'error' } : item
-        )));
-        addToast(`Upload failed for "${upload.name}": ${errorMsg}`, 'error');
-        logFez('Upload request failed', { url, status: xhr.status, errorMsg });
-      };
-
-      xhr.onerror = () => {
-        handleNetworkOrBackendError(`${BACKEND_SERVER_ERROR_MESSAGE} Upload failed for "${upload.name}".`);
-      };
-
-      xhr.send(formData);
+      delete activeXHRs.current[upload.id];
+      let errorMsg = 'Folder upload failed.';
+      try {
+        const response = JSON.parse(xhr.responseText);
+        errorMsg = response.return || response.message || errorMsg;
+      } catch {}
+      setUploads((prev) => prev.map((item) => (
+        item.id === upload.id ? { ...item, status: 'error' } : item
+      )));
+      addToast(`Upload failed for "${rootName}": ${errorMsg}`, 'error');
+      logFez('Folder upload request failed', { url, status: xhr.status, errorMsg });
     };
 
-    executeUpload(false);
+    xhr.onerror = () => {
+      handleNetworkOrBackendError(`${BACKEND_SERVER_ERROR_MESSAGE} Upload failed for "${rootName}".`);
+    };
+
+    xhr.send(formData);
   }, [userid, addToast]);
 
   const startFolderUpload = useCallback((files, directory) => {
@@ -163,120 +290,31 @@ export default function UploadPanel() {
     if (fileList.length === 0) return;
 
     const rootName = fileList[0]?.webkitRelativePath?.split('/')?.[0] || 'Folder';
+    const uploadDir = directory || '/';
+
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const upload = {
       id,
       name: rootName,
+      directory: uploadDir,
       progress: 0,
       status: 'uploading',
     };
 
-    setUploads((prev) => [upload, ...prev]);
-    setIsOpen(true);
-
-    const executeFolderUpload = async (isRetry = false) => {
-      const formData = new FormData();
-      const token = localStorage.getItem(AUTH_TOKEN_KEY);
-      const uploadDirectory = directory || '/';
-      let url = '';
-
-      try {
-        url = buildBackendUrl(`uploadfolder/${userid}/`);
-        if (isMainServerUrl(url)) {
-          throw new Error(BACKEND_SERVER_ERROR_MESSAGE);
-        }
-        formData.append('directory', uploadDirectory);
-        fileList.forEach((file) => {
-          formData.append('files', file, file.webkitRelativePath || file.name);
-        });
-      } catch (error) {
-        if (!isRetry) {
-          const newUrl = await tryResolveBackendUrl(token);
-          if (newUrl) {
-            logFez('Re-resolved backend URL before folder upload after build error', newUrl);
-            executeFolderUpload(true);
-            return;
-          }
-        }
-        setUploads((prev) => prev.map((item) => (
-          item.id === id ? { ...item, status: 'error' } : item
-        )));
-        addToast(error.message || BACKEND_SERVER_ERROR_MESSAGE, 'error');
-        logFez('Folder upload request could not resolve backend URL', error.message);
-        return;
+    setUploads((prev) => {
+      const isDuplicate = prev.some(
+        (u) => u.name === rootName && u.directory === uploadDir && u.status === 'uploading'
+      );
+      if (isDuplicate) {
+        addToast(`Folder "${rootName}" is already uploading.`, 'info');
+        return prev;
       }
 
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', url);
-      if (shouldSendNgrokHeader(url)) xhr.setRequestHeader('ngrok-skip-browser-warning', '69420');
-      if (token && String(userid) !== '0') xhr.setRequestHeader('auth', token);
-
-      activeXHRs.current[id] = xhr;
-      logFez('Folder upload request started', { url, fileCount: fileList.length, folder: rootName, isRetry });
-
-      xhr.upload.onprogress = (event) => {
-        if (!event.lengthComputable) return;
-        const progress = Math.round((event.loaded / event.total) * 100);
-        setUploads((prev) => prev.map((item) => (
-          item.id === id ? { ...item, progress } : item
-        )));
-      };
-
-      const handleNetworkOrBackendError = async (defaultErrorMsg) => {
-        delete activeXHRs.current[id];
-        if (!isRetry) {
-          const newUrl = await tryResolveBackendUrl(token);
-          if (newUrl) {
-            logFez('Re-resolved backend URL after folder upload network/server error, retrying', newUrl);
-            executeFolderUpload(true);
-            return;
-          }
-        }
-        setUploads((prev) => prev.map((item) => (
-          item.id === id ? { ...item, status: 'error' } : item
-        )));
-        addToast(defaultErrorMsg, 'error');
-        logFez('Folder upload request failed permanently', { url, folder: rootName, errorMsg: defaultErrorMsg });
-      };
-
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          delete activeXHRs.current[id];
-          setUploads((prev) => prev.map((item) => (
-            item.id === id ? { ...item, status: 'success', progress: 100 } : item
-          )));
-          addToast(`Uploaded folder "${rootName}".`, 'success');
-          refreshStructureAfterMutation(userid, 'upload-folder');
-          return;
-        }
-
-        if (xhr.status === 0 || xhr.status === 502 || xhr.status === 503 || xhr.status === 504) {
-          handleNetworkOrBackendError(`${BACKEND_SERVER_ERROR_MESSAGE} Upload failed for "${rootName}".`);
-          return;
-        }
-
-        delete activeXHRs.current[id];
-        let errorMsg = 'Folder upload failed.';
-        try {
-          const response = JSON.parse(xhr.responseText);
-          errorMsg = response.return || response.message || errorMsg;
-        } catch {}
-        setUploads((prev) => prev.map((item) => (
-          item.id === id ? { ...item, status: 'error' } : item
-        )));
-        addToast(`Upload failed for "${rootName}": ${errorMsg}`, 'error');
-        logFez('Folder upload request failed', { url, status: xhr.status, errorMsg });
-      };
-
-      xhr.onerror = () => {
-        handleNetworkOrBackendError(`${BACKEND_SERVER_ERROR_MESSAGE} Upload failed for "${rootName}".`);
-      };
-
-      xhr.send(formData);
-    };
-
-    executeFolderUpload(false);
-  }, [userid, addToast]);
+      executeFolderUploadTask(upload, fileList);
+      return [upload, ...prev];
+    });
+    setIsOpen(true);
+  }, [addToast, executeFolderUploadTask]);
 
   useEffect(() => {
     const handleTrigger = (event) => {

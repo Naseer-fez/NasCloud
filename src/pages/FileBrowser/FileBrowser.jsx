@@ -12,10 +12,44 @@ import MoveModal from '../../components/MoveModal/MoveModal';
 import NewFolderModal from '../../components/NewFolderModal/NewFolderModal';
 import RenameModal from '../../components/RenameModal/RenameModal';
 import ShareModal from '../../components/ShareModal/ShareModal';
+import BulkActionBar from '../../components/BulkActionBar/BulkActionBar';
 import Skeleton from '../../components/common/Skeleton';
 import Toolbar from '../../components/Toolbar/Toolbar';
 import { getChildrenAtPath, isFolder, itemPath, normalizePath } from '../../utils/files';
 import styles from './FileBrowser.module.css';
+
+async function traverseEntry(entry, parentPath = '') {
+  return new Promise((resolve) => {
+    if (entry.isFile) {
+      entry.file((file) => {
+        const fullRelPath = parentPath ? `${parentPath}/${file.name}` : file.name;
+        Object.defineProperty(file, 'webkitRelativePath', {
+          value: fullRelPath,
+          writable: true,
+          configurable: true,
+        });
+        resolve([file]);
+      });
+    } else if (entry.isDirectory) {
+      const dirReader = entry.createReader();
+      const readEntries = () => {
+        dirReader.readEntries(async (entries) => {
+          if (!entries.length) {
+            resolve([]);
+          } else {
+            const currentRelPath = parentPath ? `${parentPath}/${entry.name}` : entry.name;
+            const promises = entries.map((child) => traverseEntry(child, currentRelPath));
+            const childFiles = await Promise.all(promises);
+            resolve(childFiles.flat());
+          }
+        });
+      };
+      readEntries();
+    } else {
+      resolve([]);
+    }
+  });
+}
 
 export default function FileBrowser() {
   const { folderId } = useParams();
@@ -31,12 +65,15 @@ export default function FileBrowser() {
   const [dragActive, setDragActive] = useState(false);
   const dragCounter = useRef(0);
 
-  const [selectedId, setSelectedId] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [lastSelectedId, setLastSelectedId] = useState(null);
+  const [isBulkDownloading, setIsBulkDownloading] = useState(false);
+
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, item: null });
   const [renameItem, setRenameItem] = useState(null);
-  const [moveItem, setMoveItem] = useState(null);
+  const [moveItems, setMoveItems] = useState([]);
   const [shareItem, setShareItem] = useState(null);
-  const [deleteItem, setDeleteItem] = useState(null);
+  const [deleteItems, setDeleteItems] = useState([]);
   const [deleteIsPermanent, setDeleteIsPermanent] = useState(false);
   const [newFolderDirectory, setNewFolderDirectory] = useState(null);
 
@@ -90,6 +127,8 @@ export default function FileBrowser() {
 
   useEffect(() => {
     fetchFolderData();
+    setSelectedIds(new Set());
+    setLastSelectedId(null);
   }, [fetchFolderData]);
 
   useEffect(() => {
@@ -107,11 +146,28 @@ export default function FileBrowser() {
     return () => window.removeEventListener('nascloud-newfolder', folderHandler);
   }, [currentFolderPath]);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setSelectedIds(new Set());
+        setLastSelectedId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const filteredFiles = useMemo(() => {
     const query = searchValue.trim().toLowerCase();
     if (!query) return files;
     return files.filter((item) => (item.name || '').toLowerCase().includes(query));
   }, [files, searchValue]);
+
+  const getItemId = useCallback((item) => item.id || item.path || item.name, []);
+
+  const selectedItems = useMemo(() => {
+    return files.filter((item) => selectedIds.has(getItemId(item)));
+  }, [files, selectedIds, getItemId]);
 
   const folderSummary = useMemo(() => {
     const folderCount = files.filter((item) => isFolder(item)).length;
@@ -127,6 +183,39 @@ export default function FileBrowser() {
     const normalized = normalizePath(path);
     navigate(normalized ? `/folder/${encodeURIComponent(normalized)}` : '/');
   }, [navigate]);
+
+  const handleItemClick = useCallback((event, item) => {
+    const id = getItemId(item);
+    if (event.ctrlKey || event.metaKey) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        return next;
+      });
+      setLastSelectedId(id);
+    } else if (event.shiftKey && lastSelectedId) {
+      const lastIndex = filteredFiles.findIndex((f) => getItemId(f) === lastSelectedId);
+      const currentIndex = filteredFiles.findIndex((f) => getItemId(f) === id);
+      if (lastIndex !== -1 && currentIndex !== -1) {
+        const start = Math.min(lastIndex, currentIndex);
+        const end = Math.max(lastIndex, currentIndex);
+        const rangeIds = filteredFiles.slice(start, end + 1).map(getItemId);
+        setSelectedIds((prev) => new Set([...prev, ...rangeIds]));
+      }
+    } else {
+      setSelectedIds(new Set([id]));
+      setLastSelectedId(id);
+    }
+  }, [filteredFiles, getItemId, lastSelectedId]);
+
+  const handleItemDoubleClick = useCallback((event, item) => {
+    if (isFolder(item)) {
+      handleNavigate(itemPath(item, currentFolderPath));
+    } else {
+      handleSingleItemDownload(item);
+    }
+  }, [currentFolderPath, handleNavigate]);
 
   const handleDragEnter = (event) => {
     event.preventDefault();
@@ -150,22 +239,48 @@ export default function FileBrowser() {
     event.stopPropagation();
   };
 
-  const handleDrop = (event) => {
+  const handleDrop = async (event) => {
     event.preventDefault();
     event.stopPropagation();
     setDragActive(false);
     dragCounter.current = 0;
 
-    if (!event.dataTransfer.files?.length) return;
+    const items = event.dataTransfer.items;
+    if (!items || items.length === 0) return;
 
-    const droppedFiles = Array.from(event.dataTransfer.files);
-    addToast(`Preparing ${droppedFiles.length} upload(s)...`, 'info');
-    window.dispatchEvent(new CustomEvent('nascloud-upload-trigger', {
-      detail: { files: droppedFiles, directory: currentFolderPath },
-    }));
+    const entries = [];
+    for (let i = 0; i < items.length; i++) {
+      const entry = items[i].webkitGetAsEntry ? items[i].webkitGetAsEntry() : null;
+      if (entry) entries.push(entry);
+    }
+
+    if (entries.length > 0) {
+      addToast('Scanning files and folders...', 'info');
+      const filesPromises = entries.map((entry) => traverseEntry(entry));
+      const fileArrays = await Promise.all(filesPromises);
+      const allFiles = fileArrays.flat();
+      if (allFiles.length > 0) {
+        addToast(`Preparing ${allFiles.length} upload(s)...`, 'info');
+        window.dispatchEvent(new CustomEvent('nascloud-upload-trigger', {
+          detail: { files: allFiles, directory: currentFolderPath },
+        }));
+      }
+    } else if (event.dataTransfer.files?.length) {
+      const droppedFiles = Array.from(event.dataTransfer.files);
+      addToast(`Preparing ${droppedFiles.length} upload(s)...`, 'info');
+      window.dispatchEvent(new CustomEvent('nascloud-upload-trigger', {
+        detail: { files: droppedFiles, directory: currentFolderPath },
+      }));
+    }
   };
 
   const handleContextMenuTrigger = (event, item) => {
+    const id = getItemId(item);
+    if (!selectedIds.has(id)) {
+      setSelectedIds(new Set([id]));
+      setLastSelectedId(id);
+    }
+
     const path = itemPath(item, currentFolderPath);
     setContextMenu({
       visible: true,
@@ -175,26 +290,60 @@ export default function FileBrowser() {
     });
   };
 
-  const handleFileClick = useCallback(async (item) => {
-    setSelectedId(item.id || item.path || item.name);
+  const handleSingleItemDownload = useCallback(async (item) => {
     const filePath = itemPath(item, currentFolderPath);
-    addToast(`Downloading "${item.name}"...`, 'info');
+    const itemType = isFolder(item) ? 'folder' : 'file';
+    addToast(`Preparing download for ${itemType} "${item.name}"...`, 'info');
 
     try {
       const result = await downloadFile(userid, filePath);
       const url = URL.createObjectURL(result.blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = item.name;
+      link.download = isFolder(item) ? `${item.name}.zip` : item.name;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      addToast('Download complete.', 'success');
+      addToast(`Downloaded "${item.name}".`, 'success');
     } catch (err) {
       addToast(err.message || 'Download failed.', 'error');
     }
   }, [userid, currentFolderPath, addToast]);
+
+  const handleBulkDownload = useCallback(async () => {
+    if (selectedItems.length === 0 || isBulkDownloading) return;
+    setIsBulkDownloading(true);
+    addToast(`Preparing ${selectedItems.length} download(s)...`, 'info');
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const item of selectedItems) {
+      const filePath = itemPath(item, currentFolderPath);
+      try {
+        const result = await downloadFile(userid, filePath);
+        const url = URL.createObjectURL(result.blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = isFolder(item) ? `${item.name}.zip` : item.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        successCount++;
+      } catch (err) {
+        failCount++;
+      }
+    }
+
+    setIsBulkDownloading(false);
+    if (failCount === 0) {
+      addToast(`Successfully downloaded ${successCount} item(s).`, 'success');
+    } else {
+      addToast(`Downloaded ${successCount} item(s), ${failCount} failed.`, 'warning');
+    }
+  }, [selectedItems, isBulkDownloading, userid, currentFolderPath, addToast]);
 
   const handleContextAction = useCallback((actionId, item) => {
     switch (actionId) {
@@ -202,25 +351,25 @@ export default function FileBrowser() {
         handleNavigate(itemPath(item, currentFolderPath));
         break;
       case 'download':
-        handleFileClick(item);
+        handleSingleItemDownload(item);
         break;
       case 'rename':
         setRenameItem(item);
         break;
       case 'move':
-        setMoveItem(item);
+        setMoveItems([item]);
         break;
       case 'share':
         setShareItem(item);
         break;
       case 'trash':
-        setDeleteItem(item);
+        setDeleteItems([item]);
         setDeleteIsPermanent(false);
         break;
       default:
         break;
     }
-  }, [currentFolderPath, handleFileClick, handleNavigate]);
+  }, [currentFolderPath, handleSingleItemDownload, handleNavigate]);
 
   const handleNewFolder = () => {
     setNewFolderDirectory(currentFolderPath);
@@ -247,17 +396,37 @@ export default function FileBrowser() {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deleteItem) return;
-    const deletePath = itemPath(deleteItem, currentFolderPath);
+    if (deleteItems.length === 0) return;
 
-    try {
-      await deleteFile(userid, deletePath, deleteIsPermanent ? 0 : 1);
-      addToast(deleteIsPermanent ? 'Deleted permanently.' : `Moved "${deleteItem.name}" to Trash.`, 'success');
-      setDeleteItem(null);
+    let successCount = 0;
+    for (const item of deleteItems) {
+      const deletePath = itemPath(item, currentFolderPath);
+      try {
+        await deleteFile(userid, deletePath, deleteIsPermanent ? 0 : 1);
+        successCount++;
+      } catch (err) {
+        addToast(`Failed to delete "${item.name}": ${err.message}`, 'error');
+      }
+    }
+
+    if (successCount > 0) {
+      addToast(
+        deleteIsPermanent
+          ? `Permanently deleted ${successCount} item(s).`
+          : `Moved ${successCount} item(s) to Trash.`,
+        'success'
+      );
+      setSelectedIds(new Set());
       fetchFolderData();
       window.dispatchEvent(new CustomEvent(SIDEBAR_REFRESH_EVENT));
-    } catch (err) {
-      addToast(err.message || 'Action failed.', 'error');
+    }
+    setDeleteItems([]);
+  };
+
+  const handleBackgroundClick = (e) => {
+    if (e.target === e.currentTarget) {
+      setSelectedIds(new Set());
+      setLastSelectedId(null);
     }
   };
 
@@ -268,6 +437,7 @@ export default function FileBrowser() {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
+      onClick={handleBackgroundClick}
     >
       <Toolbar
         currentPath={currentFolderPath}
@@ -283,7 +453,7 @@ export default function FileBrowser() {
         summary={folderSummary}
       />
 
-      <div className={styles.content}>
+      <div className={styles.content} onClick={handleBackgroundClick}>
         <div className={styles.folderHeader}>
           <div className={styles.folderTitleBlock}>
             <p className={styles.eyebrow}>{currentFolderPath || 'Home'}</p>
@@ -293,6 +463,7 @@ export default function FileBrowser() {
             <span>{folderSummary.folders} folders</span>
             <span>{folderSummary.files} files</span>
             {searchValue.trim() && <span>{folderSummary.shown} shown</span>}
+            {selectedIds.size > 0 && <span style={{ color: 'var(--accent)', fontWeight: 600 }}>({selectedIds.size} selected)</span>}
           </div>
         </div>
 
@@ -309,7 +480,7 @@ export default function FileBrowser() {
           <div className={styles.emptyState}>
             <FolderOpen className={styles.emptyIcon} size={44} aria-hidden="true" />
             <h3>This folder is empty</h3>
-            <p>Drag files here or use the Upload button to get started.</p>
+            <p>Drag files or folders here or use the Upload button to get started.</p>
           </div>
         ) : (
           <FileList
@@ -318,8 +489,10 @@ export default function FileBrowser() {
             currentPath={currentFolderPath}
             onContextMenu={handleContextMenuTrigger}
             onNavigate={handleNavigate}
-            onFileClick={handleFileClick}
-            selectedId={selectedId}
+            onFileClick={handleSingleItemDownload}
+            onItemClick={handleItemClick}
+            onItemDoubleClick={handleItemDoubleClick}
+            selectedIds={Array.from(selectedIds)}
           />
         )}
       </div>
@@ -328,8 +501,8 @@ export default function FileBrowser() {
         <div className={styles.dragOverlay}>
           <div className={styles.dragCard}>
             <UploadCloud className={styles.dragIcon} size={52} aria-hidden="true" />
-            <h3>Drop your files here</h3>
-            <p>Instantly upload them to the current folder</p>
+            <h3>Drop files or folders here</h3>
+            <p>Instantly upload them to the current folder while preserving directory structure</p>
           </div>
         </div>
       )}
@@ -341,6 +514,22 @@ export default function FileBrowser() {
         item={contextMenu.item}
         onAction={handleContextAction}
         onClose={() => setContextMenu({ visible: false, x: 0, y: 0, item: null })}
+      />
+
+      <BulkActionBar
+        selectedCount={selectedIds.size}
+        onDownload={handleBulkDownload}
+        onMove={() => setMoveItems(selectedItems)}
+        onRename={() => setRenameItem(selectedItems[0] || null)}
+        onShare={() => setShareItem(selectedItems[0] || null)}
+        onDelete={() => {
+          setDeleteItems(selectedItems);
+          setDeleteIsPermanent(false);
+        }}
+        onClear={() => {
+          setSelectedIds(new Set());
+          setLastSelectedId(null);
+        }}
       />
 
       <RenameModal
@@ -361,10 +550,11 @@ export default function FileBrowser() {
       />
 
       <MoveModal
-        isOpen={!!moveItem}
-        onClose={() => setMoveItem(null)}
-        item={moveItem}
+        isOpen={moveItems.length > 0}
+        onClose={() => setMoveItems([])}
+        items={moveItems}
         onSuccess={() => {
+          setSelectedIds(new Set());
           fetchFolderData();
           window.dispatchEvent(new CustomEvent(SIDEBAR_REFRESH_EVENT));
         }}
@@ -377,9 +567,9 @@ export default function FileBrowser() {
       />
 
       <DeleteConfirmModal
-        isOpen={!!deleteItem}
-        onClose={() => setDeleteItem(null)}
-        item={deleteItem}
+        isOpen={deleteItems.length > 0}
+        onClose={() => setDeleteItems([])}
+        items={deleteItems}
         isPermanent={deleteIsPermanent}
         onConfirm={handleDeleteConfirm}
       />

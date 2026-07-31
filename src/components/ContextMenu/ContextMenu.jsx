@@ -41,10 +41,16 @@ export default function ContextMenu({ visible, x, y, item, onAction, onClose }) 
   return createPortal(
     <div ref={menuRef} className={styles.menu} style={{ top: `${position.y}px`, left: `${position.x}px` }}>
       {folder ? (
-        <button type="button" className={styles.item} onClick={() => handleItemClick('open')}>
-          <FolderOpen size={16} aria-hidden="true" />
-          <span>Open Folder</span>
-        </button>
+        <>
+          <button type="button" className={styles.item} onClick={() => handleItemClick('open')}>
+            <FolderOpen size={16} aria-hidden="true" />
+            <span>Open Folder</span>
+          </button>
+          <button type="button" className={styles.item} onClick={() => handleItemClick('download')}>
+            <Download size={16} aria-hidden="true" />
+            <span>Download Folder</span>
+          </button>
+        </>
       ) : (
         <button type="button" className={styles.item} onClick={() => handleItemClick('download')}>
           <Download size={16} aria-hidden="true" />

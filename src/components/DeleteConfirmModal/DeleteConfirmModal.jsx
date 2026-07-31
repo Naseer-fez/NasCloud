@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import styles from './DeleteConfirmModal.module.css';
 
-export default function DeleteConfirmModal({ isOpen, onClose, item, isPermanent = false, onConfirm }) {
+export default function DeleteConfirmModal({ isOpen, onClose, item, items = [], isPermanent = false, onConfirm }) {
   const [loading, setLoading] = useState(false);
 
-  if (!isOpen || !item) return null;
+  const itemList = items.length > 0 ? items : item ? [item] : [];
+  if (!isOpen || itemList.length === 0) return null;
+
+  const count = itemList.length;
+  const displayName = count === 1 ? `"${itemList[0].name}"` : `${count} items`;
 
   const handleConfirmClick = async () => {
     setLoading(true);
@@ -26,18 +30,18 @@ export default function DeleteConfirmModal({ isOpen, onClose, item, isPermanent 
         <p className={styles.msg}>
           {isPermanent ? (
             <>
-              Are you sure you want to permanently delete <span className={styles.name}>"{item.name}"</span>?
+              Are you sure you want to permanently delete <span className={styles.name}>{displayName}</span>?
             </>
           ) : (
             <>
-              Move <span className={styles.name}>"{item.name}"</span> to trash?
+              Move <span className={styles.name}>{displayName}</span> to trash?
             </>
           )}
         </p>
 
         {isPermanent && (
           <div className={styles.warningAlert}>
-            This action cannot be undone and will erase this item permanently from the servers.
+            This action cannot be undone and will erase {count === 1 ? 'this item' : 'these items'} permanently from the servers.
           </div>
         )}
 
