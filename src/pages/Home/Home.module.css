@@ -1,6 +1,6 @@
 .homeContainer {
   min-height: 100vh;
-  background-color: var(--bg-primary);
+  background-color: transparent;
   color: var(--text-primary);
   display: flex;
   flex-direction: column;
@@ -18,7 +18,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--bg-primary);
+  background: rgba(20, 53, 71, 0.4);
+  backdrop-filter: blur(15px);
   border-bottom: 1px solid var(--border-subtle);
   z-index: var(--z-toolbar);
   transition: background var(--duration-normal) var(--ease-apple);
@@ -103,10 +104,10 @@
   gap: 8px;
   background: var(--accent-gradient);
   border: none;
-  color: #FFFFFF;
+  color: #1e1e1e;
   text-decoration: none;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   padding: 8px 16px;
   border-radius: var(--radius-sm);
   transition: opacity var(--duration-fast), transform var(--duration-fast);
@@ -198,9 +199,9 @@
   align-items: center;
   gap: 8px;
   background: var(--accent-gradient);
-  color: #FFFFFF;
+  color: #1e1e1e;
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
   padding: 12px 28px;
   border-radius: var(--radius-md);

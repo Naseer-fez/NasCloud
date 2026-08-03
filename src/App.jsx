@@ -7,6 +7,7 @@ import AppLayout from './layouts/AppLayout';
 import ToastContainer from './components/common/ToastContainer';
 import NasCloudLogo from './components/common/NasCloudLogo';
 import ScrollbarTracker from './components/common/ScrollbarTracker';
+import MeshBackground from './components/common/MeshBackground';
 import DualLogin from './pages/DualLogin/DualLogin';
 import Home from './pages/Home/Home';
 import Dashboard from './pages/Dashboard/Dashboard';
@@ -22,6 +23,7 @@ export default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
+        <MeshBackground />
         <BrowserRouter>
           <Routes>
             {/* Public Routes */}

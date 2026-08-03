@@ -155,7 +155,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--bg-primary);
+  background: transparent;
   z-index: 1;
 }
 
@@ -166,7 +166,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--bg-primary);
+  background: transparent;
   z-index: 2;
   pointer-events: none;
 }

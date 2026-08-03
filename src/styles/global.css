@@ -10,7 +10,7 @@ html, body, #root {
 body {
   color: var(--text-primary);
   font-family: var(--font);
-  background: var(--bg-primary);
+  background: transparent;
   transition: background-color var(--duration-normal) var(--ease-apple), color var(--duration-normal) var(--ease-apple);
 }
 
@@ -92,8 +92,8 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Button Semantic Variants */
 .primary {
-  color: #FFFFFF;
-  font-weight: 600;
+  color: #1e1e1e;
+  font-weight: 700;
   background: var(--accent-gradient);
   border: 0;
 }

@@ -4,30 +4,30 @@
      "The Crack" — 5:35 AM, dawn light breaking
      through an ancient forest canopy
      ========================================== */
-  --bg-primary: #0a0e08;
-  --bg-elevated: rgba(12, 20, 16, 0.68);
-  --bg-secondary: #101a14;
-  --bg-tertiary: #162018;
-  --bg-sidebar: #0a100c;
+  --bg-primary: transparent;
+  --bg-elevated: rgba(18, 35, 48, 0.6);
+  --bg-secondary: rgba(20, 45, 60, 0.5);
+  --bg-tertiary: rgba(25, 55, 75, 0.5);
+  --bg-sidebar: rgba(14, 30, 42, 0.7);
 
-  --text-primary: rgba(232, 220, 200, 0.92);
-  --text-secondary: #a09880;
-  --text-tertiary: #6a6050;
+  --text-primary: #ffffff;
+  --text-secondary: #dce175;
+  --text-tertiary: rgba(255, 255, 255, 0.75);
 
-  --accent: #c46488;
-  --accent-hover: #d4849c;
-  --accent-gradient: linear-gradient(135deg, #b0a898 0%, #c46488 100%);
+  --accent: #dce175;
+  --accent-hover: #e5e985;
+  --accent-gradient: linear-gradient(135deg, #dce175 0%, #c3d286 100%);
 
   /* Semantic Colors */
-  --success: #5a9a68;
-  --danger: #c45a5a;
-  --warning: #c4a040;
-  --info: #6a90b0;
+  --success: #739d73;
+  --danger: #e06c75;
+  --warning: #dce175;
+  --info: #478ba1;
 
   /* Borders */
-  --border-subtle: rgba(232, 220, 200, 0.08);
-  --border-visible: rgba(232, 220, 200, 0.15);
-  --border-accent: rgba(196, 100, 136, 0.35);
+  --border-subtle: rgba(255, 255, 255, 0.12);
+  --border-visible: rgba(255, 255, 255, 0.22);
+  --border-accent: rgba(220, 225, 117, 0.4);
 
   /* Shadows */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.15);
