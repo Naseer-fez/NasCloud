@@ -179,10 +179,18 @@
   background: var(--bg-secondary);
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
+  .gridContainer {
+    grid-template-columns: 1fr;
+  }
+
   .headerRow,
   .row {
-    grid-template-columns: minmax(130px, 1fr) 42px;
+    grid-template-columns: 1fr 42px;
+  }
+
+  .row {
+    min-height: 60px; /* Larger touch target for mobile */
   }
 
   .colSize,

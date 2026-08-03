@@ -7,6 +7,23 @@
   transition: background var(--duration-normal) var(--ease-apple);
 }
 
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 40;
+  animation: fadeIn var(--duration-fast) var(--ease-apple);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .main {
   flex: 1;
   display: flex;
@@ -26,4 +43,10 @@
   display: flex;
   flex-direction: column;
   animation: contentAppear var(--duration-normal) var(--ease-apple) forwards;
+}
+
+@media (max-width: 768px) {
+  .layout {
+    height: 100vh; /* Prevent scrolling on body for mobile */
+  }
 }

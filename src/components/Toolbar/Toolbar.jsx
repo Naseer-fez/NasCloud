@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import {
   ChevronDown,
   FileUp,
@@ -8,6 +8,7 @@ import {
   Grid2X2,
   List,
   LogOut,
+  Menu,
   RefreshCw,
   Search,
   Settings,
@@ -32,6 +33,9 @@ export default function Toolbar({
 }) {
   const { userid, logout } = useAuth();
   const navigate = useNavigate();
+  const outletContext = useOutletContext();
+  const isMobile = outletContext?.isMobile;
+  const handleToggleSidebar = outletContext?.handleToggleSidebar;
 
   const [uploadOpen, setUploadOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -85,6 +89,12 @@ export default function Toolbar({
   return (
     <header className={styles.toolbar}>
       <div className={styles.pathGroup}>
+        {isMobile && (
+          <button className={styles.menuBtn} onClick={handleToggleSidebar} title="Open sidebar">
+            <Menu size={20} />
+          </button>
+        )}
+        <div className={styles.pathDetails}>
         <nav className={styles.breadcrumbs} aria-label="Folder breadcrumb">
           {breadcrumbs.map((crumb, index) => (
             <React.Fragment key={crumb.path || 'home'}>
@@ -103,6 +113,7 @@ export default function Toolbar({
         <span className={styles.pathMeta}>
           {summary ? `${summary.total} items` : 'Drive'}
         </span>
+        </div>
       </div>
 
       <div className={styles.searchWrapper}>

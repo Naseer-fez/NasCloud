@@ -10,11 +10,27 @@
   overflow: hidden;
   background: var(--bg-sidebar);
   border-right: 1px solid var(--border-subtle);
-  transition: width var(--transition-normal), background-color var(--duration-normal) var(--ease-apple);
+  transition: width var(--transition-normal), transform var(--transition-normal), background-color var(--duration-normal) var(--ease-apple);
 }
 
 .collapsed {
   width: 72px;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    z-index: 50;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    transform: translateX(0);
+  }
+
+  .collapsed {
+    transform: translateX(-100%);
+    width: 272px; /* keep full width when sliding out */
+  }
 }
 
 .brand {

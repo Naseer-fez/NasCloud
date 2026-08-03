@@ -7,18 +7,25 @@ import styles from './AppLayout.module.css';
 export default function AppLayout() {
   const location = useLocation();
 
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    return window.innerWidth < 768;
-  });
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.innerWidth <= 768);
 
   const handleToggleSidebar = useCallback(() => {
     setSidebarCollapsed((prev) => !prev);
   }, []);
 
+  const closeSidebar = useCallback(() => {
+    setSidebarCollapsed(true);
+  }, []);
+
   useEffect(() => {
     const handler = () => {
-      if (window.innerWidth < 768) {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      if (mobile) {
         setSidebarCollapsed(true);
+      } else {
+        setSidebarCollapsed(false);
       }
     };
     window.addEventListener('resize', handler);
@@ -27,14 +34,19 @@ export default function AppLayout() {
 
   return (
     <div className={styles.layout}>
+      {isMobile && !sidebarCollapsed && (
+        <div className={styles.overlay} onClick={closeSidebar}></div>
+      )}
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggle={handleToggleSidebar}
+        isMobile={isMobile}
+        onClose={closeSidebar}
       />
       <main className={styles.main}>
         <div className={styles.content}>
           <div key={location.pathname} className={styles.contentAnimated}>
-            <Outlet />
+            <Outlet context={{ handleToggleSidebar, isMobile }} />
           </div>
         </div>
       </main>

@@ -9,6 +9,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Trash2,
+  X,
 } from 'lucide-react';
 import { getStructure, getUserStats } from '../../api/endpoints';
 import { SIDEBAR_REFRESH_EVENT } from '../../config';
@@ -17,7 +18,7 @@ import { formatBytes, isFolder, itemPath, normalizePath } from '../../utils/file
 import NasCloudLogo from '../common/NasCloudLogo';
 import styles from './Sidebar.module.css';
 
-export default function Sidebar({ collapsed, onToggle }) {
+export default function Sidebar({ collapsed, onToggle, isMobile, onClose }) {
   const { userid } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -138,8 +139,8 @@ export default function Sidebar({ collapsed, onToggle }) {
           <NasCloudLogo size={24} className={styles.logoIcon} />
           {!collapsed && <span className={styles.logoText}>PersonalDrive</span>}
         </button>
-        <button className={styles.toggleBtn} onClick={onToggle} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
-          {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+        <button className={styles.toggleBtn} onClick={isMobile ? onClose : onToggle} title={isMobile ? 'Close sidebar' : (collapsed ? 'Expand sidebar' : 'Collapse sidebar')}>
+          {isMobile ? <X size={18} /> : (collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />)}
         </button>
       </div>
 
